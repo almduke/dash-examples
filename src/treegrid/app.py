@@ -40,7 +40,7 @@ rowData = [
         "path": "Beta.Four",
         "name": "Four",
         "value": 25,
-    }
+    },
 ]
 
 
@@ -51,7 +51,7 @@ columnDefs = [
 
 
 grid = html.Div(
-   [
+    [
         dag.AgGrid(
             id="tree-data-example",
             columnDefs=columnDefs,
@@ -72,7 +72,7 @@ grid = html.Div(
                 "treeData": True,
                 "animateRows": False,
                 "onRowDragEnd": {"function": "onRowDragEnd(params)"},
-                "suppressRowDrag" : True,
+                "suppressRowDrag": True,
             },
             rowData=rowData,
             enableEnterpriseModules=True,
@@ -85,10 +85,12 @@ grid = html.Div(
 app.layout = html.Div(
     [
         dcc.Markdown("Example: Tree grid with drag and drop."),
-        dcc.Checklist([{"label": "Enable drag and drop", "value": "Y"}],
-                      id="enable_drag_and_drop"),
+        dcc.Checklist(
+            [{"label": "Enable drag and drop", "value": "Y"}],
+            id="enable_drag_and_drop",
+        ),
         grid,
-        html.Div(id="output", children=[])
+        html.Div(id="output", children=[]),
     ]
 )
 
@@ -112,9 +114,9 @@ clientside_callback(
         }
     """,
     Output("tree-data-example", "id"),
-    Input("enable_drag_and_drop","value"),
-    prevent_initial_call=True
+    Input("enable_drag_and_drop", "value"),
+    prevent_initial_call=True,
 )
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     app.run(debug=True)
