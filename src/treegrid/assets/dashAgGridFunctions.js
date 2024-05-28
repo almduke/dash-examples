@@ -1,4 +1,6 @@
 var dagfuncs = (window.dashAgGridFunctions = window.dashAgGridFunctions || {});
+var dagcomponentfuncs = (window.dashAgGridComponentFunctions =
+  window.dashAgGridComponentFunctions || {});
 
 dagfuncs.getDataPath = function (data) {
   return data.path.split(".");
@@ -32,3 +34,24 @@ function onRowDragEnd(e) {
   });
   const res = gridApi.applyTransaction({ update: itemsToUpdate });
 }
+
+dagcomponentfuncs.Button = function (props) {
+  const { setData, data } = props;
+
+  function onClick(e) {
+    e.persist();
+    var answer = prompt("New node name?");
+
+    if (answer === null) return;
+
+    setData(answer);
+  }
+  return React.createElement(
+    "button",
+    {
+      onClick: onClick,
+      className: props.className,
+    },
+    props.value,
+  );
+};

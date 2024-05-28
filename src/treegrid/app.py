@@ -1,5 +1,16 @@
+""" App """
+
 import dash_ag_grid as dag
-from dash import Dash, html, dcc, Input, Output, clientside_callback
+from dash import (
+    Dash,
+    html,
+    dcc,
+    Input,
+    Output,
+    State,
+    callback,
+    clientside_callback,
+)
 
 app = Dash(__name__, suppress_callback_exceptions=True)
 
@@ -45,8 +56,19 @@ rowData = [
 
 
 columnDefs = [
+    {
+        "field": "add",
+        "cellRenderer": "Button",
+        "cellRendererParams": {"className": "button_plus"},
+        "suppressMenu": True,
+        "sortable": False,
+        "minWidth": 75,
+        "maxWidth": 75,
+        "hide": True,
+    },
     {"field": "name"},
     {"field": "value"},
+    {"field": "id"},
 ]
 
 
@@ -86,11 +108,11 @@ app.layout = html.Div(
     [
         dcc.Markdown("Example: Tree grid with drag and drop."),
         dcc.Checklist(
-            [{"label": "Enable drag and drop", "value": "Y"}],
+            [{"label": "Enable grid editing", "value": "Y"}],
             id="enable_drag_and_drop",
         ),
         grid,
-        html.Div(id="output", children=[]),
+        html.Div(id="output"),
     ]
 )
 
@@ -104,9 +126,11 @@ clientside_callback(
                 if(n[0] === undefined) {
                     gridApi.setGridOption("suppressRowDrag", true);
                     gridApi.removeEventListener("rowDragEnd", onRowDragEnd);
+                    gridApi.setColumnsVisible(["add"], false);
                 } else {
                     gridApi.setGridOption("suppressRowDrag", false);
                     gridApi.addEventListener("rowDragEnd", onRowDragEnd);
+                    gridApi.setColumnsVisible(["add"], true);
                 }
 
                 return window.dash_clientside.no_update;
@@ -117,6 +141,29 @@ clientside_callback(
     Input("enable_drag_and_drop", "value"),
     prevent_initial_call=True,
 )
+
+
+@callback(
+    # Output("output", "children"),
+    Output("tree-data-example", "rowTransaction"),
+    Input("tree-data-example", "cellRendererData"),
+    State("tree-data-example", "rowData"),
+    prevent_initial_call=True,
+)
+def add_row(n, row_data):
+    """Callback for add button press"""
+    new_id = max(item["id"] for item in row_data) + 1
+    row_id = int(n["rowId"])
+    path = next((row for row in row_data if row["id"] == row_id), "")["path"]
+    path = path + "." + n["value"]
+    # return f"{row_data} , {n} , {path}, {new_id}, {row_id}"
+    return {
+        "addIndex": 0,
+        "add": [
+            {"id": new_id, "path": path, "name": n["value"], "value": None}
+        ],
+    }
+
 
 if __name__ == "__main__":
     app.run(debug=True)
