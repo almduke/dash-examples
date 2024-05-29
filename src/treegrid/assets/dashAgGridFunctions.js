@@ -35,7 +35,7 @@ function onRowDragEnd(e) {
   const res = gridApi.applyTransaction({ update: itemsToUpdate });
 }
 
-dagcomponentfuncs.Button = function (props) {
+dagcomponentfuncs.ButtonAdd = function (props) {
   const { setData, data } = props;
 
   function onClick(e) {
@@ -45,6 +45,22 @@ dagcomponentfuncs.Button = function (props) {
     if (answer === null) return;
 
     setData(answer);
+  }
+  return React.createElement(
+    "button",
+    {
+      onClick: onClick,
+      className: props.className,
+    },
+    props.value,
+  );
+};
+
+dagcomponentfuncs.ButtonDel = function (props) {
+  const { setData, data } = props;
+
+  function onClick(e) {
+    setData();
   }
   return React.createElement(
     "button",

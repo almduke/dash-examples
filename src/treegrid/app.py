@@ -58,8 +58,18 @@ rowData = [
 columnDefs = [
     {
         "field": "add",
-        "cellRenderer": "Button",
+        "cellRenderer": "ButtonAdd",
         "cellRendererParams": {"className": "button_plus"},
+        "suppressMenu": True,
+        "sortable": False,
+        "minWidth": 75,
+        "maxWidth": 75,
+        "hide": True,
+    },
+    {
+        "field": "del",
+        "cellRenderer": "ButtonDel",
+        "cellRendererParams": {"className": "button_minus"},
         "suppressMenu": True,
         "sortable": False,
         "minWidth": 75,
@@ -126,11 +136,11 @@ clientside_callback(
                 if(n[0] === undefined) {
                     gridApi.setGridOption("suppressRowDrag", true);
                     gridApi.removeEventListener("rowDragEnd", onRowDragEnd);
-                    gridApi.setColumnsVisible(["add"], false);
+                    gridApi.setColumnsVisible(["add","del"], false);
                 } else {
                     gridApi.setGridOption("suppressRowDrag", false);
                     gridApi.addEventListener("rowDragEnd", onRowDragEnd);
-                    gridApi.setColumnsVisible(["add"], true);
+                    gridApi.setColumnsVisible(["add","del"], true);
                 }
 
                 return window.dash_clientside.no_update;
@@ -150,19 +160,34 @@ clientside_callback(
     State("tree-data-example", "rowData"),
     prevent_initial_call=True,
 )
-def add_row(n, row_data):
+def row_update(n, row_data):
     """Callback for add button press"""
-    new_id = max(item["id"] for item in row_data) + 1
-    row_id = int(n["rowId"])
-    path = next((row for row in row_data if row["id"] == row_id), "")["path"]
-    path = path + "." + n["value"]
-    # return f"{row_data} , {n} , {path}, {new_id}, {row_id}"
-    return {
-        "addIndex": 0,
-        "add": [
-            {"id": new_id, "path": path, "name": n["value"], "value": None}
-        ],
-    }
+    app.logger.info(n)
+    result = ""
+    if n["colId"] == "add":
+        new_id = max(item["id"] for item in row_data) + 1
+        row_id = int(n["rowId"])
+        path = next((row for row in row_data if row["id"] == row_id), "")[
+            "path"
+        ]
+        path = path + "." + n["value"]
+        result = {
+            "add": [
+                {"id": new_id, "path": path, "name": n["value"], "value": None}
+            ]
+        }
+    if n["colId"] == "del":
+        path = row_data[n["rowIndex"]]["path"]
+        result = {
+            "remove": [
+                {"id": row.get("id")}
+                for row in row_data
+                if row["path"].startswith(path)
+            ]
+        }
+        app.logger.info(path)
+        app.logger.info(result)
+    return result
 
 
 if __name__ == "__main__":
