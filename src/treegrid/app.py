@@ -10,6 +10,7 @@ from dash import (
     State,
     callback,
     clientside_callback,
+    ctx,
 )
 
 app = Dash(__name__, suppress_callback_exceptions=True)
@@ -123,6 +124,16 @@ app.layout = html.Div(
         ),
         grid,
         html.Div(id="output"),
+        html.Dialog(
+            id="new-node-dialog",
+            children=[
+                html.Div(
+                    dcc.Input(id="new-node-parent", type="hidden", value="")
+                ),
+                html.Div(dcc.Input(id="new-node-name", type="text", value="")),
+                html.Button("Close", id="btn-close-dialog"),
+            ],
+        ),
     ]
 )
 
@@ -154,40 +165,48 @@ clientside_callback(
 
 
 @callback(
-    # Output("output", "children"),
     Output("tree-data-example", "rowTransaction"),
+    Output("new-node-dialog", "open", allow_duplicate=True),
+    Output("new-node-parent", "value"),
+    Input("btn-close-dialog", "n_clicks"),
     Input("tree-data-example", "cellRendererData"),
+    State("new-node-parent", "value"),
+    State("new-node-name", "value"),
     State("tree-data-example", "rowData"),
     prevent_initial_call=True,
 )
-def row_update(n, row_data):
+def row_update(btn_close, grid_button, parent_path, new_node_name, row_data):
     """Callback for add button press"""
-    app.logger.info(n)
-    result = ""
-    if n["colId"] == "add":
-        new_id = max(item["id"] for item in row_data) + 1
-        row_id = int(n["rowId"])
-        path = next((row for row in row_data if row["id"] == row_id), "")[
-            "path"
-        ]
-        path = path + "." + n["value"]
-        result = {
-            "add": [
-                {"id": new_id, "path": path, "name": n["value"], "value": None}
-            ]
-        }
-    if n["colId"] == "del":
-        path = row_data[n["rowIndex"]]["path"]
-        result = {
+    transaction = None
+    trigger = ctx.triggered_id
+
+    if trigger == "tree-data-example" and grid_button["colId"] == "add":
+        return transaction, True, grid_button["value"]
+
+    if trigger == "tree-data-example" and grid_button["colId"] == "del":
+        transaction = {
             "remove": [
                 {"id": row.get("id")}
                 for row in row_data
-                if row["path"].startswith(path)
+                if row["path"].startswith(grid_button["value"])
             ]
         }
-        app.logger.info(path)
-        app.logger.info(result)
-    return result
+
+    if trigger == "btn-close-dialog" and btn_close > 0:
+        new_id = max(item["id"] for item in row_data) + 1
+        path = parent_path + "." + new_node_name
+        transaction = {
+            "add": [
+                {
+                    "id": new_id,
+                    "path": path,
+                    "name": new_node_name,
+                    "value": None,
+                }
+            ]
+        }
+
+    return transaction, False, ""
 
 
 if __name__ == "__main__":

@@ -40,17 +40,14 @@ dagcomponentfuncs.ButtonAdd = function (props) {
 
   function onClick(e) {
     e.persist();
-    var answer = prompt("New node name?");
-
-    if (answer === null) return;
-
-    setData(answer);
+    setData(e.target.value);
   }
   return React.createElement(
     "button",
     {
       onClick: onClick,
       className: props.className,
+      value: data.path,
     },
     props.value,
   );
@@ -60,13 +57,15 @@ dagcomponentfuncs.ButtonDel = function (props) {
   const { setData, data } = props;
 
   function onClick(e) {
-    setData();
+    e.persist();
+    setData(e.target.value);
   }
   return React.createElement(
     "button",
     {
       onClick: onClick,
       className: props.className,
+      value: data.path,
     },
     props.value,
   );
